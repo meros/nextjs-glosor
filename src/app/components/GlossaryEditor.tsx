@@ -144,7 +144,7 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
                 className="border p-2 w-full"
               />
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
               <input
                 type="text"
                 placeholder="Ny definition"
