@@ -1,6 +1,6 @@
 import { FaPlus, FaTrash } from 'react-icons/fa'; // Import the plus and trash icons from react-icons
 import { languages } from '../constants';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 
 export interface Glossary {
   fromLanguage: string;
@@ -58,6 +58,16 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
 
   const setToLanguage = (value: string) => {
     setGlossary({ ...glossary, toLanguage: value });
+  };
+
+  const ref = useRef<HTMLInputElement>(null);
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && !disableAddGlossaryButton) {
+      addGlossaryItem();
+      // Refocus the first input field
+      ref.current?.focus();
+    }
   };
 
   return (
@@ -125,10 +135,12 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
           <tr>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
               <input
+                ref={ref}
                 type="text"
                 placeholder="Nytt ord"
                 value={newGlossary.a}
                 onChange={(e) => setNewGlossary({ ...newGlossary, a: e.target.value })}
+                onKeyPress={handleKeyPress}
                 className="border p-2 w-full"
               />
             </td>
@@ -138,6 +150,7 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
                 placeholder="Ny definition"
                 value={newGlossary.b}
                 onChange={(e) => setNewGlossary({ ...newGlossary, b: e.target.value })}
+                onKeyPress={handleKeyPress}
                 className="border p-2 w-full"
               />
             </td>
