@@ -1,48 +1,70 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import VocabularyTest from '../components/VocabularyTest';
 import { useGlossary } from '../context/GlossaryContext';
 
 export default function TrainPage() {
   const glossaryContext = useGlossary();
+  const [items, setItems] = useState<
+    {
+      fromLanguage: string;
+      toLanguage: string;
+      from: string;
+      to: string;
+      correct: number;
+      total: number;
+    }[]
+  >(
+    glossaryContext.glossary.items.flatMap((item) => [
+      {
+        fromLanguage: glossaryContext.glossary.fromLanguage,
+        toLanguage: glossaryContext.glossary.toLanguage,
+        from: item.a,
+        to: item.b,
+        correct: 0,
+        total: 0,
+      },
+      {
+        fromLanguage: glossaryContext.glossary.toLanguage,
+        toLanguage: glossaryContext.glossary.fromLanguage,
+        from: item.b,
+        to: item.a,
+        correct: 0,
+        total: 0,
+      },
+    ]),
+  );
 
   const router = useRouter();
 
-  const chooseRandomItem = () => {
-    return glossaryContext.glossary.items[Math.floor(Math.random() * glossaryContext.glossary.items.length)];
+  const chooseRandomItemIdx = () => {
+    return Math.floor(Math.random() * items.length);
   };
 
-  const chooseRandomLanguage = () => {
-    return Math.random() > 0.5 ? glossaryContext.glossary.fromLanguage : glossaryContext.glossary.toLanguage;
-  };
-
-  const [item, setItem] = useState(chooseRandomItem());
-  const [language, setLanguage] = useState(chooseRandomLanguage());
+  const [itemIdx, setItemIdx] = useState(chooseRandomItemIdx());
+  const item = useMemo(() => items[itemIdx], [itemIdx, items]);
 
   const [userInput, setUserInput] = useState('');
 
-  const fromVocabulary = language === glossaryContext.glossary.fromLanguage ? item.a : item.b;
-  const toVocabulary = language === glossaryContext.glossary.fromLanguage ? item.b : item.a;
-  const fromLanguage =
-    language === glossaryContext.glossary.fromLanguage
-      ? glossaryContext.glossary.fromLanguage
-      : glossaryContext.glossary.toLanguage;
-  const toLanguage =
-    language === glossaryContext.glossary.fromLanguage
-      ? glossaryContext.glossary.toLanguage
-      : glossaryContext.glossary.fromLanguage;
-
   const onCheckAnswer = (answer: string) => {
-    if (answer === toVocabulary) {
+    if (answer === item.to) {
       alert('Rätt svar!');
     } else {
       alert('Fel svar!');
     }
 
-    setItem(chooseRandomItem());
-    setLanguage(chooseRandomLanguage());
+    setItems([
+      ...items.slice(0, itemIdx),
+      {
+        ...item,
+        correct: item.correct + (answer === item.to ? 1 : 0),
+        total: item.total + 1,
+      },
+      ...items.slice(itemIdx + 1),
+    ]);
+    setItemIdx(chooseRandomItemIdx());
     setUserInput('');
   };
 
@@ -51,7 +73,7 @@ export default function TrainPage() {
       <div className="bg-white rounded-lg w-full max-w-4xl ">
         <header className="text-black text-2xl p-6 font-bold py-4 w-full">Träna glosor</header>
         <VocabularyTest
-          data={{ fromLanguage, toLanguage, fromVocabulary, userInput }}
+          data={{ fromVocabulary: item.from, fromLanguage: item.fromLanguage, toLanguage: item.toLanguage, userInput }}
           onHandlers={{
             setUserInput,
             onCheckAnswer,
@@ -60,6 +82,11 @@ export default function TrainPage() {
       </div>
       <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3">
         <div className="flex justify-center">
+          {items.map((item, idx) => (
+            <div key={idx} className="text-sm text-gray-500">
+              {item.from} → {item.to}: {item.correct}/{item.total}
+            </div>
+          ))}
           <button
             className="bg-blue-500 text-white text-lg font-bold py-3 px-6 rounded hover:bg-blue-700"
             onClick={() => {
