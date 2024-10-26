@@ -1,38 +1,16 @@
+// TrainPage.tsx
+
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import VocabularyTest from '../components/VocabularyTest';
-import { useGlossary } from '../context/GlossaryContext';
+import { useTraining } from '../context/TrainingContext';
 
 export default function TrainPage() {
-  const glossaryContext = useGlossary();
   const router = useRouter();
 
-  const [items, setItems] = useState(
-    glossaryContext.glossary.items.flatMap((item) => [
-      {
-        fromLanguage: glossaryContext.glossary.fromLanguage,
-        toLanguage: glossaryContext.glossary.toLanguage,
-        from: item.a,
-        to: item.b,
-        correct: 0,
-        total: 0,
-        lastReviewed: Date.now(),
-        confidence: 50,
-      },
-      {
-        fromLanguage: glossaryContext.glossary.toLanguage,
-        toLanguage: glossaryContext.glossary.fromLanguage,
-        from: item.b,
-        to: item.a,
-        correct: 0,
-        total: 0,
-        lastReviewed: Date.now(),
-        confidence: 50,
-      },
-    ]),
-  );
+  const { items, updateStats } = useTraining(); // Use TrainingContext here
 
   const [isCaseSensitive, setIsCaseSensitive] = useState(true); // Case sensitivity toggle
 
@@ -88,28 +66,11 @@ export default function TrainPage() {
     const cleanAnswer = isCaseSensitive ? item.to.trim() : item.to.trim().toLowerCase();
     const cleanUserInput = isCaseSensitive ? userInput.trim() : userInput.trim().toLowerCase();
 
-    console.log(cleanAnswer, cleanUserInput);
     const isCorrect = cleanUserInput === cleanAnswer;
     setFeedback({ isCorrect, correctAnswer: item.to });
 
-    setItems([
-      ...items.slice(0, itemIdx).map((it) => ({
-        ...it,
-        lastReviewed: it.lastReviewed - 1,
-      })),
-      {
-        ...item,
-        correct: item.correct + (isCorrect ? 1 : 0),
-        total: item.total + 1,
-        lastReviewed: Date.now(),
-        confidence: Math.max(0, Math.min(100, item.confidence + (isCorrect ? 10 : -10))),
-      },
-      ...items.slice(itemIdx + 1).map((it) => ({
-        ...it,
-        lastReviewed: it.lastReviewed - 1,
-      })),
-    ]);
-
+    // Update stats in TrainingContext
+    updateStats(itemIdx, isCorrect);
     setCountdown(5);
   };
 
