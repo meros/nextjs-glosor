@@ -3,6 +3,7 @@ import { languages } from '../constants';
 import { useMemo, useRef } from 'react';
 
 export interface Glossary {
+  name: string;
   fromLanguage: string;
   toLanguage: string;
   items: GlossaryItem[];

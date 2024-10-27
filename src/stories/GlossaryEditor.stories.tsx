@@ -26,8 +26,9 @@ export const Default = Template.bind({});
 Default.args = {
   data: {
     glossary: {
+      name: 'English to Swedish',
       fromLanguage: 'en',
-      toLanguage: 'sv',
+      toLanguage: 'se',
       items: [
         { a: 'Hus', b: 'House' },
         { a: 'Bil', b: 'Car' },

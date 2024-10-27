@@ -24,7 +24,7 @@ export const Default = Template.bind({});
 Default.args = {
   data: {
     fromLanguage: 'en',
-    toLanguage: 'sv',
+    toLanguage: 'se',
     fromVocabulary: 'House',
     userInput: 'Hus',
   },

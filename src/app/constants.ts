@@ -5,7 +5,7 @@ interface Language {
 }
 
 export const languages: Language[] = [
-  { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
+  { code: 'se', name: 'Svenska', flag: '🇸🇪' },
   { code: 'de', name: 'Tyska', flag: '🇩🇪' },
   { code: 'en', name: 'Engelska', flag: '🇬🇧' },
   { code: 'es', name: 'Spanska', flag: '🇪🇸' },
