@@ -1,5 +1,3 @@
-// TrainPage.tsx
-
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -102,6 +100,14 @@ export default function TrainPage() {
       return () => window.removeEventListener('keydown', handleKeyPress);
     }
   }, [feedback, goToNextItem]);
+
+  if (!item) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-2xl text-gray-700">Inga glosor att öva på.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen">
