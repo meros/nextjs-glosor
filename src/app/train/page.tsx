@@ -17,13 +17,12 @@ export default function TrainPage() {
       items
         .map((item, idx) => {
           const elapsedTime = (Date.now() - item.lastReviewed) / 1000 / 60; // in minutes
-          const timeFactor = Math.log(1 + elapsedTime) * 0.5; // Lower time influence
 
-          const difficultyFactor = item.total === 0 ? 1 : (item.total - item.correct) / item.total;
-          const confidenceFactor = (100 - item.confidence) / 5; // Higher confidence influence
+          const timeFactor = Math.log(1 + elapsedTime); // Lower time influence
+          const confidenceFactor = -item.confidence / 20; // Higher confidence influence
 
-          const weight = (difficultyFactor + confidenceFactor) * timeFactor;
-          return { idx, weight };
+          const weight = confidenceFactor + timeFactor;
+          return { idx, weight, difficultyFactor: confidenceFactor, timeFactor };
         })
         .sort((a, b) => b.weight - a.weight),
     [items],
@@ -160,6 +159,13 @@ export default function TrainPage() {
           </button>
         </div>
       </div>
+      {sortedItems.map((item, idx) => (
+        <div key={idx}>
+          <p>
+            {items[item.idx].from}: {item.weight}, {item.difficultyFactor}, {item.timeFactor}
+          </p>
+        </div>
+      ))}
       <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3">
         <div className="flex justify-center">
           <button

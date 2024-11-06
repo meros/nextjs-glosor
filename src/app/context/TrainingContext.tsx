@@ -50,7 +50,7 @@ export const TrainingProvider = ({ children, initialItems }: TrainingProviderPro
               correct: item.correct + (isCorrect ? 1 : 0),
               total: item.total + 1,
               lastReviewed: Date.now(),
-              confidence: Math.max(0, Math.min(100, item.confidence + (isCorrect ? 10 : -10))),
+              confidence: item.confidence + (isCorrect ? 1 : -1),
             }
           : item,
       ),
@@ -64,7 +64,7 @@ export const TrainingProvider = ({ children, initialItems }: TrainingProviderPro
         correct: 0,
         total: 0,
         lastReviewed: Date.now(),
-        confidence: 50,
+        confidence: 0,
       })),
     );
   }, []);
