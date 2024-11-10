@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { languages } from '../constants';
 
 interface VocabularyTestProps {
@@ -6,25 +6,22 @@ interface VocabularyTestProps {
     fromLanguage: string;
     toLanguage: string;
     fromVocabulary: string;
-    userInput: string;
   };
   onHandlers: {
     onCheckAnswer: (userInput: string) => void;
-    setUserInput: (userInput: string) => void;
   };
 }
 
 export default function VocabularyTest({
-  data: { fromLanguage, toLanguage, fromVocabulary, userInput },
-  onHandlers: { onCheckAnswer, setUserInput },
+  data: { fromLanguage, toLanguage, fromVocabulary },
+  onHandlers: { onCheckAnswer },
 }: VocabularyTestProps) {
-  const [result, setResult] = useState<'correct' | 'incorrect' | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Set focus to input field when the component loads or when result resets
   useEffect(() => {
     if (inputRef.current) inputRef.current.focus();
-  }, [result]);
+  }, []);
 
   const fromLang = languages.find((lang) => lang.code === fromLanguage);
   const toLang = languages.find((lang) => lang.code === toLanguage);
@@ -40,18 +37,13 @@ export default function VocabularyTest({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          onCheckAnswer(userInput);
+          onCheckAnswer(inputRef.current?.value || '');
         }}
         className="flex flex-col items-center gap-3 w-full"
       >
         <input
           ref={inputRef} // Set ref on the input field for focus control
           type="text"
-          value={userInput}
-          onChange={(e) => {
-            setUserInput(e.target.value);
-            setResult(null);
-          }}
           className="border border-gray-300 rounded p-2 w-full text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Skriv ditt svar här"
         />
@@ -59,8 +51,6 @@ export default function VocabularyTest({
           Kontrollera
         </button>
       </form>
-      {result === 'correct' && <p className="text-green-600 font-medium mt-2">Rätt svar!</p>}
-      {result === 'incorrect' && <p className="text-red-500 font-medium mt-2">Fel svar. Försök igen.</p>}
     </div>
   );
 }

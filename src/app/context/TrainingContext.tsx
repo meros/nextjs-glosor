@@ -1,6 +1,4 @@
-// TrainingContext.tsx
-
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState, useMemo } from 'react';
 
 interface TrainingItem {
   from: string;
@@ -8,20 +6,25 @@ interface TrainingItem {
   correct: number;
   total: number;
   lastReviewed: number;
-  confidence: number;
   fromLanguage: string;
   toLanguage: string;
 }
 
-interface TrainingContextProps {
+interface TrainingContextValue {
   items: TrainingItem[];
-  updateStats: (idx: number, isCorrect: boolean) => void;
-  resetStats: () => void;
+  setItems: React.Dispatch<React.SetStateAction<TrainingItem[]>>;
+  currentItem: TrainingItem | null;
+  isCaseSensitive: boolean;
+  checkAnswer: (userInput: string) => void;
+  checkAnswerFeedback: { isCorrect: boolean; correctAnswer: string } | null;
+  countdownToNextItem: number;
+  goToNextItem: () => void;
+  setIsCaseSensitive: (isCaseSensitive: boolean) => void;
 }
 
-const TrainingContext = createContext<TrainingContextProps | undefined>(undefined);
+const TrainingContext = createContext<TrainingContextValue | undefined>(undefined);
 
-export const useTraining = (): TrainingContextProps => {
+export const useTraining = (): TrainingContextValue => {
   const context = useContext(TrainingContext);
   if (!context) {
     throw new Error('useTraining must be used within a TrainingProvider');
@@ -31,43 +34,103 @@ export const useTraining = (): TrainingContextProps => {
 
 interface TrainingProviderProps {
   children: ReactNode;
-  initialItems: TrainingItem[];
 }
 
-export const TrainingProvider = ({ children, initialItems }: TrainingProviderProps) => {
-  const [items, setItems] = useState<TrainingItem[]>(initialItems);
+export const TrainingProvider = ({ children }: TrainingProviderProps) => {
+  const [items, setItems] = useState<TrainingItem[]>([]);
+  const [checkAnswerFeedback, setCheckAnswerFeedback] = useState<{ isCorrect: boolean; correctAnswer: string } | null>(
+    null,
+  );
+  const [countdownToNextItem, setCountdownToNextItem] = useState(5);
+  const [isCaseSensitive, setIsCaseSensitive] = useState(true);
+  const [currentItemIdx, setCurrentItemIdx] = useState<number | undefined>(undefined);
+
+  const currentItem = useMemo(
+    () => (currentItemIdx !== undefined ? items[currentItemIdx] : null),
+    [items, currentItemIdx],
+  );
+
+  const sortedItems = useMemo(
+    () => items.map((item, idx) => ({ idx, weight: item.correct })).sort((a, b) => b.weight - a.weight),
+    [items],
+  );
+
+  const chooseRandomItemIdx = useCallback(() => {
+    if (sortedItems.length === 0) {
+      return undefined;
+    }
+
+    const lowestWeight = sortedItems[sortedItems.length - 1].weight;
+    const lowestWeightItems = sortedItems.filter((item) => item.weight === lowestWeight);
+    const randomIdx = Math.floor(Math.random() * lowestWeightItems.length);
+    return lowestWeightItems[randomIdx].idx;
+  }, [sortedItems]);
 
   useEffect(() => {
-    setItems(initialItems);
-  }, [initialItems]);
+    setCurrentItemIdx(chooseRandomItemIdx());
+  }, [items, chooseRandomItemIdx]);
 
-  const updateStats = useCallback((idx: number, isCorrect: boolean) => {
+  const updateStats = useCallback((item: TrainingItem, isCorrect: boolean) => {
     setItems((prevItems) =>
-      prevItems.map((item, i) =>
-        i === idx
+      prevItems.map((i) =>
+        i === item
           ? {
               ...item,
               correct: item.correct + (isCorrect ? 1 : 0),
               total: item.total + 1,
               lastReviewed: Date.now(),
-              confidence: item.confidence + (isCorrect ? 1 : -1),
             }
-          : item,
+          : i,
       ),
     );
   }, []);
 
-  const resetStats = useCallback(() => {
-    setItems((prevItems) =>
-      prevItems.map((item) => ({
-        ...item,
-        correct: 0,
-        total: 0,
-        lastReviewed: Date.now(),
-        confidence: 0,
-      })),
-    );
-  }, []);
+  const checkAnswer = useCallback(
+    (userInput: string) => {
+      if (!currentItem) {
+        return;
+      }
 
-  return <TrainingContext.Provider value={{ items, updateStats, resetStats }}>{children}</TrainingContext.Provider>;
+      const cleanAnswer = isCaseSensitive ? currentItem.to.trim() : currentItem.to.trim().toLowerCase();
+      const cleanUserInput = isCaseSensitive ? userInput.trim() : userInput.trim().toLowerCase();
+
+      const isCorrect = cleanUserInput === cleanAnswer;
+      setCheckAnswerFeedback({ isCorrect, correctAnswer: currentItem.to });
+      updateStats(currentItem, isCorrect);
+      setCountdownToNextItem(5);
+    },
+    [currentItem, isCaseSensitive, updateStats],
+  );
+
+  const goToNextItem = useCallback(() => {
+    setCurrentItemIdx(chooseRandomItemIdx());
+    setCheckAnswerFeedback(null);
+  }, [chooseRandomItemIdx]);
+
+  useEffect(() => {
+    if (checkAnswerFeedback && countdownToNextItem > 0) {
+      const timer = setTimeout(() => setCountdownToNextItem(countdownToNextItem - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (countdownToNextItem === 0) {
+      goToNextItem();
+    }
+  }, [checkAnswerFeedback, countdownToNextItem, goToNextItem]);
+
+  return (
+    <TrainingContext.Provider
+      value={{
+        items,
+        setItems,
+        currentItem,
+        isCaseSensitive,
+        checkAnswer,
+        checkAnswerFeedback,
+        countdownToNextItem,
+        goToNextItem,
+        setIsCaseSensitive,
+      }}
+    >
+      {children}
+    </TrainingContext.Provider>
+  );
 };

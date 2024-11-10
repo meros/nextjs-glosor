@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import GlossaryEditor, { Glossary, GlossaryEditorProps, GlossaryItem } from '../components/GlossaryEditor';
 import { useGlossary } from '../context/GlossaryContext';
 import GlossaryManager from '../components/GlossaryManager';
+import { useTraining } from '../context/TrainingContext';
 
 const initialGlossaries: Glossary[] = [
   {
@@ -64,7 +65,9 @@ const initialGlossaries: Glossary[] = [
 ];
 
 export default function EditPage() {
-  const { setGlossary } = useGlossary();
+  const { setGlossary, glossary } = useGlossary();
+  const { setItems } = useTraining();
+
   const router = useRouter();
 
   const [glossaries, setGlossaries] = useState<Glossary[]>(initialGlossaries);
@@ -118,6 +121,34 @@ export default function EditPage() {
     [selectedGlossaryIdx],
   );
 
+  const setTrainingItemsAndNavigate = () => {
+    const trainingItems = glossary.items.flatMap((item) => [
+      {
+        from: item.a,
+        to: item.b,
+        correct: 0,
+        total: 0,
+        lastReviewed: Date.now(),
+        confidence: 0,
+        fromLanguage: glossary.fromLanguage,
+        toLanguage: glossary.toLanguage,
+      },
+      {
+        from: item.b,
+        to: item.a,
+        correct: 0,
+        total: 0,
+        lastReviewed: Date.now(),
+        confidence: 0,
+        fromLanguage: glossary.toLanguage,
+        toLanguage: glossary.fromLanguage,
+      },
+    ]);
+
+    setItems(trainingItems);
+    router.push('/train');
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen">
       <div className="bg-white rounded-lg w-full max-w-4xl p-6">
@@ -141,7 +172,7 @@ export default function EditPage() {
         <div className="flex justify-center">
           <button
             className="bg-blue-500 text-white text-lg font-bold py-3 px-6 rounded hover:bg-blue-700"
-            onClick={() => router.push('/train')}
+            onClick={setTrainingItemsAndNavigate}
           >
             Träna glosor
           </button>

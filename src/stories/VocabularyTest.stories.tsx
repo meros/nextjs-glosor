@@ -26,10 +26,8 @@ Default.args = {
     fromLanguage: 'en',
     toLanguage: 'se',
     fromVocabulary: 'House',
-    userInput: 'Hus',
   },
   onHandlers: {
     onCheckAnswer: action('onCheckAnswer'),
-    setUserInput: action('setUserInput'),
   },
 };

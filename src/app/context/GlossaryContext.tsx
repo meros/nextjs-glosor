@@ -2,14 +2,14 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Glossary } from '../components/GlossaryEditor';
 
-interface GlossaryContextProps {
+interface GlossaryContextValue {
   glossary: Glossary;
   setGlossary: (glossary: Glossary) => void;
 }
 
-const GlossaryContext = createContext<GlossaryContextProps | undefined>(undefined);
+const GlossaryContext = createContext<GlossaryContextValue | undefined>(undefined);
 
-export const useGlossary = (): GlossaryContextProps => {
+export const useGlossary = (): GlossaryContextValue => {
   const context = useContext(GlossaryContext);
   if (!context) {
     throw new Error('useGlossary must be used within a GlossaryProvider');
@@ -21,7 +21,7 @@ interface GlossaryProviderProps {
   children: ReactNode;
 }
 
-export const GlossaryProvider = ({ children }: GlossaryProviderProps) => {
+export const GlossaryProvider: React.FC<GlossaryProviderProps> = ({ children }) => {
   const [glossary, setGlossary] = useState<Glossary>({
     name: 'Anonymous',
     fromLanguage: 'se',
