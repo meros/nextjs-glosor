@@ -1,8 +1,8 @@
 'use client';
 
+import { Button, Stack, Text } from '@mantine/core';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Stack, Group, Button, Text } from '@mantine/core';
 import VocabularyTest from '../components/VocabularyTest';
 import { useTraining } from '../context/TrainingContext';
 

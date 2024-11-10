@@ -1,4 +1,4 @@
-import { Button, Flex, Stack, Text, TextInput } from '@mantine/core';
+import { Button, Stack, Text, TextInput } from '@mantine/core';
 import { useCallback, useEffect, useRef } from 'react';
 import { languages } from '../constants';
 

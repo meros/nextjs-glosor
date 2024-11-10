@@ -1,4 +1,4 @@
-import { ActionIcon, Select, Stack, Table, TextInput } from '@mantine/core';
+import { ActionIcon, Select, Table, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useMemo, useRef } from 'react';
 import { languages } from '../constants';

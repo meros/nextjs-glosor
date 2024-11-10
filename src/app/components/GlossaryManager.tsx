@@ -1,4 +1,4 @@
-import { Button, Combobox, Flex, Group, InputBase, useCombobox } from '@mantine/core';
+import { Button, Combobox, Group, InputBase, useCombobox } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { Glossary } from '../components/GlossaryEditor';
 
