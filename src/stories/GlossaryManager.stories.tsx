@@ -1,7 +1,4 @@
-// GlossaryManager.stories.tsx
-
 import GlossaryManager from '@/app/components/GlossaryManager';
-import '@/app/globals.css';
 import { Meta, StoryFn } from '@storybook/react';
 
 export default {

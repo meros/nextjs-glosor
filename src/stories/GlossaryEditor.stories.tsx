@@ -1,5 +1,4 @@
 import GlossaryEditor from '@/app/components/GlossaryEditor';
-import '@/app/globals.css';
 import { Meta, StoryFn } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 

@@ -1,5 +1,4 @@
 import VocabularyTest from '@/app/components/VocabularyTest';
-import '@/app/globals.css';
 import { action } from '@storybook/addon-actions';
 import { Meta, StoryFn } from '@storybook/react';
 

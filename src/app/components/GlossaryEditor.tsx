@@ -1,6 +1,7 @@
-import { FaPlus, FaTrash } from 'react-icons/fa'; // Import the plus and trash icons from react-icons
-import { languages } from '../constants';
+import { ActionIcon, Select, Stack, Table, TextInput } from '@mantine/core';
+import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useMemo, useRef } from 'react';
+import { languages } from '../constants';
 
 export interface Glossary {
   name: string;
@@ -29,7 +30,7 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
   const { glossary, newGlossary } = data;
   const { setGlossary, setNewGlossary } = onHandlers;
 
-  const disableAddGlossaryButton = useMemo(() => !Boolean(newGlossary.a && newGlossary.b), [newGlossary]);
+  const disableAddGlossaryButton = useMemo(() => !(newGlossary.a && newGlossary.b), [newGlossary]);
 
   const addGlossaryItem = () => {
     setGlossary({
@@ -66,107 +67,82 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && !disableAddGlossaryButton) {
       addGlossaryItem();
-      // Refocus the first input field
       ref.current?.focus();
     }
   };
 
   return (
-    <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <select
-                value={glossary.fromLanguage}
-                onChange={(e) => setFromLanguage(e.target.value)}
-                className="border p-2"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.name}
-                  </option>
-                ))}
-              </select>
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <select
-                value={glossary.toLanguage}
-                onChange={(e) => setToLanguage(e.target.value)}
-                className="border p-2"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.name}
-                  </option>
-                ))}
-              </select>
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              &nbsp;
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {glossary.items.map((item, index) => (
-            <tr key={index}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                <input
-                  type="text"
-                  value={item.a}
-                  onChange={(e) => updateGlossaryItem(index, 'a', e.target.value)}
-                  className="border p-2 w-full"
-                />
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                <input
-                  type="text"
-                  value={item.b}
-                  onChange={(e) => updateGlossaryItem(index, 'b', e.target.value)}
-                  className="border p-2 w-full"
-                />
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <button onClick={() => deleteGlossaryItem(index)} className="text-gray-500 hover:text-red-500">
-                  <FaTrash />
-                </button>
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-              <input
-                ref={ref}
-                type="text"
-                placeholder="Nytt ord"
-                value={newGlossary.a}
-                onChange={(e) => setNewGlossary({ ...newGlossary, a: e.target.value })}
-                onKeyPress={handleKeyPress}
-                className="border p-2 w-full"
-              />
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-              <input
-                type="text"
-                placeholder="Ny definition"
-                value={newGlossary.b}
-                onChange={(e) => setNewGlossary({ ...newGlossary, b: e.target.value })}
-                onKeyPress={handleKeyPress}
-                className="border p-2 w-full"
-              />
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              <button
-                disabled={disableAddGlossaryButton}
-                onClick={addGlossaryItem}
-                className={`hover:text-green-500 ${disableAddGlossaryButton ? 'text-gray-300' : 'text-green-500'}`}
-              >
-                <FaPlus />
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </main>
+    <Table>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>
+            <Select
+              value={glossary.fromLanguage}
+              onChange={(value) => value && setFromLanguage(value)}
+              data={languages.map((lang) => ({
+                value: lang.code,
+                label: `${lang.flag} ${lang.name}`,
+              }))}
+            />
+          </Table.Th>
+          <Table.Th>
+            <Select
+              value={glossary.toLanguage}
+              onChange={(value) => value && setToLanguage(value)}
+              data={languages.map((lang) => ({
+                value: lang.code,
+                label: `${lang.flag} ${lang.name}`,
+              }))}
+            />
+          </Table.Th>
+          <Table.Th>&nbsp;</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {glossary.items.map((item, index) => (
+          <Table.Tr key={index}>
+            <Table.Td>
+              <TextInput value={item.a} onChange={(e) => updateGlossaryItem(index, 'a', e.target.value)} />
+            </Table.Td>
+            <Table.Td>
+              <TextInput value={item.b} onChange={(e) => updateGlossaryItem(index, 'b', e.target.value)} />
+            </Table.Td>
+            <Table.Td>
+              <ActionIcon onClick={() => deleteGlossaryItem(index)}>
+                <IconTrash size={16} />
+              </ActionIcon>
+            </Table.Td>
+          </Table.Tr>
+        ))}
+        <Table.Tr>
+          <Table.Td>
+            <TextInput
+              ref={ref}
+              placeholder="New word"
+              value={newGlossary.a}
+              onChange={(e) => setNewGlossary({ ...newGlossary, a: e.target.value })}
+              onKeyPress={handleKeyPress}
+            />
+          </Table.Td>
+          <Table.Td>
+            <TextInput
+              placeholder="New definition"
+              value={newGlossary.b}
+              onChange={(e) => setNewGlossary({ ...newGlossary, b: e.target.value })}
+              onKeyPress={handleKeyPress}
+            />
+          </Table.Td>
+          <Table.Td>
+            <ActionIcon
+              disabled={disableAddGlossaryButton}
+              onClick={addGlossaryItem}
+              color={disableAddGlossaryButton ? 'gray' : 'green'}
+            >
+              <IconPlus size={16} />
+            </ActionIcon>
+          </Table.Td>
+        </Table.Tr>
+      </Table.Tbody>
+    </Table>
   );
 }
