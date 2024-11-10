@@ -1,24 +1,12 @@
-import { Metadata } from 'next';
-import localFont from 'next/font/local';
-import './globals.css';
-import Providers from './providers';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { Metadata } from 'next';
+import Providers from './providers';
+import { ColorSchemeScript } from '@mantine/core';
 
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
-  weight: '100 900',
-});
-const geistMono = localFont({
-  src: './fonts/GeistMonoVF.woff',
-  variable: '--font-geist-mono',
-  weight: '100 900',
-});
-
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Glosorna.se',
   description: 'En sida för att öva på glosor',
-};
+} satisfies Metadata;
 
 export default function Layout({
   children,
@@ -27,7 +15,14 @@ export default function Layout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content={metadata.description} />
+        <title>{metadata.title}</title>
+        <ColorSchemeScript />
+      </head>
+      <body>
         <Providers>{children}</Providers>
       </body>
       <GoogleAnalytics gaId="G-SZ2CB4C0EF" />

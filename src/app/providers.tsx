@@ -1,8 +1,12 @@
 'use client';
 
+import '@mantine/core/styles.css';
+
 import { GlossaryProvider } from './context/GlossaryContext';
 import { TrainingProvider } from './context/TrainingContext';
-import './globals.css';
+import { createTheme, MantineProvider } from '@mantine/core';
+
+const theme = createTheme({});
 
 export default function Providers({
   children,
@@ -10,8 +14,10 @@ export default function Providers({
   children: React.ReactNode;
 }>) {
   return (
-    <GlossaryProvider>
-      <TrainingProvider>{children}</TrainingProvider>
-    </GlossaryProvider>
+    <MantineProvider theme={theme}>
+      <GlossaryProvider>
+        <TrainingProvider>{children}</TrainingProvider>
+      </GlossaryProvider>
+    </MantineProvider>
   );
 }
