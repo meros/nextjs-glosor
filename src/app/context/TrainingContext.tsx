@@ -1,4 +1,5 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState, useMemo } from 'react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface TrainingItem {
   from: string;
@@ -37,12 +38,12 @@ interface TrainingProviderProps {
 }
 
 export const TrainingProvider = ({ children }: TrainingProviderProps) => {
-  const [items, setItems] = useState<TrainingItem[]>([]);
+  const [items, setItems] = useLocalStorage<TrainingItem[]>('trainingItems', []);
   const [checkAnswerFeedback, setCheckAnswerFeedback] = useState<{ isCorrect: boolean; correctAnswer: string } | null>(
     null,
   );
   const [countdownToNextItem, setCountdownToNextItem] = useState(5);
-  const [isCaseSensitive, setIsCaseSensitive] = useState(true);
+  const [isCaseSensitive, setIsCaseSensitive] = useLocalStorage<boolean>('isCaseSensitive', true);
   const [currentItemIdx, setCurrentItemIdx] = useState<number | undefined>(undefined);
 
   const currentItem = useMemo(
@@ -70,20 +71,23 @@ export const TrainingProvider = ({ children }: TrainingProviderProps) => {
     setCurrentItemIdx(chooseRandomItemIdx());
   }, [items, chooseRandomItemIdx]);
 
-  const updateStats = useCallback((item: TrainingItem, isCorrect: boolean) => {
-    setItems((prevItems) =>
-      prevItems.map((i) =>
-        i === item
-          ? {
-              ...item,
-              correct: item.correct + (isCorrect ? 1 : 0),
-              total: item.total + 1,
-              lastReviewed: Date.now(),
-            }
-          : i,
-      ),
-    );
-  }, []);
+  const updateStats = useCallback(
+    (item: TrainingItem, isCorrect: boolean) => {
+      setItems((prevItems) =>
+        prevItems.map((i) =>
+          i === item
+            ? {
+                ...item,
+                correct: item.correct + (isCorrect ? 1 : 0),
+                total: item.total + 1,
+                lastReviewed: Date.now(),
+              }
+            : i,
+        ),
+      );
+    },
+    [setItems],
+  );
 
   const checkAnswer = useCallback(
     (userInput: string) => {

@@ -2,6 +2,7 @@ import { ActionIcon, Select, Table, TextInput } from '@mantine/core';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useMemo, useRef } from 'react';
 import { languages } from '../constants';
+import { useLocale } from '../hooks/useLocale';
 
 export interface Glossary {
   name: string;
@@ -29,6 +30,7 @@ export interface GlossaryEditorProps {
 export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps) {
   const { glossary, newGlossary } = data;
   const { setGlossary, setNewGlossary } = onHandlers;
+  const locale = useLocale();
 
   const disableAddGlossaryButton = useMemo(() => !(newGlossary.a && newGlossary.b), [newGlossary]);
 
@@ -77,6 +79,7 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
         <Table.Tr>
           <Table.Th>
             <Select
+              label={locale.edit.fromLanguage}
               value={glossary.fromLanguage}
               onChange={(value) => value && setFromLanguage(value)}
               data={languages.map((lang) => ({
@@ -87,6 +90,7 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
           </Table.Th>
           <Table.Th>
             <Select
+              label={locale.edit.toLanguage}
               value={glossary.toLanguage}
               onChange={(value) => value && setToLanguage(value)}
               data={languages.map((lang) => ({
@@ -118,7 +122,7 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
           <Table.Td>
             <TextInput
               ref={ref}
-              placeholder="New word"
+              placeholder={locale.edit.wordPairs.from}
               value={newGlossary.a}
               onChange={(e) => setNewGlossary({ ...newGlossary, a: e.target.value })}
               onKeyPress={handleKeyPress}
@@ -126,7 +130,7 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
           </Table.Td>
           <Table.Td>
             <TextInput
-              placeholder="New definition"
+              placeholder={locale.edit.wordPairs.to}
               value={newGlossary.b}
               onChange={(e) => setNewGlossary({ ...newGlossary, b: e.target.value })}
               onKeyPress={handleKeyPress}

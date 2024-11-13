@@ -1,6 +1,7 @@
-import { Button, Stack, Text, TextInput } from '@mantine/core';
+import { Button, Group, Stack, Text, TextInput } from '@mantine/core';
 import { useCallback, useEffect, useRef } from 'react';
 import { languages } from '../constants';
+import { useLocale } from '../hooks/useLocale';
 
 interface VocabularyTestProps {
   data: {
@@ -13,45 +14,41 @@ interface VocabularyTestProps {
   };
 }
 
-export default function VocabularyTest({
-  data: { fromLanguage, toLanguage, fromVocabulary },
-  onHandlers: { onCheckAnswer },
-}: VocabularyTestProps) {
+export default function VocabularyTest({ data, onHandlers }: VocabularyTestProps) {
+  const locale = useLocale();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  const fromLang = languages.find((lang) => lang.code === fromLanguage);
-  const toLang = languages.find((lang) => lang.code === toLanguage);
+  const fromLang = languages.find((lang) => lang.code === data.fromLanguage);
+  const toLang = languages.find((lang) => lang.code === data.toLanguage);
 
   const checkAnswer = useCallback(() => {
-    onCheckAnswer(inputRef.current?.value || '');
-  }, [onCheckAnswer]);
+    onHandlers.onCheckAnswer(inputRef.current?.value || '');
+  }, [onHandlers]);
 
   return (
     <Stack>
-      <Text>
-        {fromLang?.flag} {fromLang?.name} ➔ {toLang?.flag} {toLang?.name}
+      <Text size="xl" flex={1}>
+        {locale.train.translate} <strong>{data.fromVocabulary}</strong> {locale.train.from}
+        <strong>{fromLang?.flag}</strong> {locale.train.to} <strong>{toLang?.flag}</strong>
       </Text>
-
-      <Text>
-        Översätt ordet: <strong>{fromVocabulary}</strong>
-      </Text>
-
-      <TextInput
-        ref={inputRef}
-        onKeyUp={(event) => {
-          if (event.key === 'Enter') {
-            checkAnswer();
-          }
-        }}
-        placeholder="Skriv ditt svar här"
-      />
-      <Button fullWidth onClick={checkAnswer}>
-        Kontrollera
-      </Button>
+      <Group>
+        <TextInput
+          flex={1}
+          ref={inputRef}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              checkAnswer();
+            }
+          }}
+          placeholder={locale.train.inputPlaceholder}
+        />
+        <Button onClick={checkAnswer}>{locale.common.check}</Button>
+      </Group>
     </Stack>
   );
 }

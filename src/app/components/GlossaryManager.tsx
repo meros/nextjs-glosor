@@ -1,6 +1,7 @@
 import { Button, Combobox, Group, InputBase, useCombobox } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { Glossary } from '../components/GlossaryEditor';
+import { useLocale } from '../hooks/useLocale';
 
 interface GlossaryManagerProps {
   glossaries: Glossary[];
@@ -19,6 +20,7 @@ export default function GlossaryManager({
   onDeleteGlossary,
   onRenameGlossary,
 }: GlossaryManagerProps) {
+  const locale = useLocale();
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
@@ -39,7 +41,7 @@ export default function GlossaryManager({
 
   const options = filteredOptions.map((item) => (
     <Combobox.Option value={item} key={item}>
-      📚 Välj <strong>{item}</strong>
+      📚 {item}
     </Combobox.Option>
   ));
 
@@ -68,7 +70,6 @@ export default function GlossaryManager({
 
   return (
     <Group>
-      {/* Editable dropdown using Combobox */}
       <Combobox store={combobox} onOptionSubmit={handleOptionSubmit}>
         <Combobox.Target>
           <InputBase
@@ -84,7 +85,7 @@ export default function GlossaryManager({
               combobox.closeDropdown();
               setSearch(value);
             }}
-            placeholder="Select or create glossary"
+            placeholder={locale.edit.glossaries.select}
             rightSection={<Combobox.Chevron />}
             rightSectionPointerEvents="none"
           />
@@ -95,21 +96,21 @@ export default function GlossaryManager({
             {options}
             {!exactOptionMatch && search.trim().length > 0 && selectedGlossaryIdx !== -1 && (
               <Combobox.Option value="$rename">
-                ✏️ Byt namn på <strong>{value}</strong> till <strong>{search}</strong>
+                ✏️ {locale.edit.glossaries.rename} <strong>{value}</strong> {locale.edit.glossaries.to}{' '}
+                <strong>{search}</strong>
               </Combobox.Option>
             )}
             {!exactOptionMatch && search.trim().length > 0 && (
               <Combobox.Option value="$create">
-                ✨ Skapa ny med namn <strong>{search}</strong>
+                ✨ {locale.edit.glossaries.create} <strong>{search}</strong>
               </Combobox.Option>
             )}
           </Combobox.Options>
         </Combobox.Dropdown>
       </Combobox>
 
-      {/* Delete button */}
       <Button onClick={onDeleteGlossary} color="red">
-        Delete
+        {locale.edit.glossaries.delete}
       </Button>
     </Group>
   );

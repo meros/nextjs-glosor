@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import GlossaryEditor, { Glossary, GlossaryEditorProps, GlossaryItem } from '../components/GlossaryEditor';
 import GlossaryManager from '../components/GlossaryManager';
+import PageContent from '../components/PageContent';
 import { useGlossary } from '../context/GlossaryContext';
 import { useTraining } from '../context/TrainingContext';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const initialGlossaries: Glossary[] = [
   {
@@ -70,7 +72,7 @@ export default function EditPage() {
   const { setItems } = useTraining();
   const router = useRouter();
 
-  const [glossaries, setGlossaries] = useState<Glossary[]>(initialGlossaries);
+  const [glossaries, setGlossaries] = useLocalStorage<Glossary[]>('glossaries', initialGlossaries);
   const [selectedGlossaryIdx, setSelectedGlossaryIdx] = useState(0);
   const [newGlossaryItem, setNewGlossaryItem] = useState<GlossaryItem>({ a: '', b: '' });
 
@@ -147,25 +149,27 @@ export default function EditPage() {
   };
 
   return (
-    <Stack>
-      <Text size="xl">Ändra glosor</Text>
+    <PageContent>
+      <Stack>
+        <Text size="xl">Ändra glosor</Text>
 
-      {/* Glossary Management */}
-      <GlossaryManager
-        glossaries={glossaries}
-        selectedGlossaryIdx={selectedGlossaryIdx}
-        onSelectGlossary={setSelectedGlossaryIdx}
-        onAddGlossary={addGlossary}
-        onDeleteGlossary={deleteGlossary}
-        onRenameGlossary={renameGlossary}
-      />
+        {/* Glossary Management */}
+        <GlossaryManager
+          glossaries={glossaries}
+          selectedGlossaryIdx={selectedGlossaryIdx}
+          onSelectGlossary={setSelectedGlossaryIdx}
+          onAddGlossary={addGlossary}
+          onDeleteGlossary={deleteGlossary}
+          onRenameGlossary={renameGlossary}
+        />
 
-      {/* Glossary Editing */}
-      <GlossaryEditor data={data} onHandlers={onHandlers} />
+        {/* Glossary Editing */}
+        <GlossaryEditor data={data} onHandlers={onHandlers} />
 
-      <Button size="lg" onClick={setTrainingItemsAndNavigate} variant="filled" color="blue">
-        Träna glosor
-      </Button>
-    </Stack>
+        <Button size="lg" onClick={setTrainingItemsAndNavigate} variant="filled" color="blue">
+          Träna glosor
+        </Button>
+      </Stack>
+    </PageContent>
   );
 }
