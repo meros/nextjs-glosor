@@ -41,6 +41,8 @@ export const sv = {
       to: 'Till',
       delete: 'Ta bort ordpar',
     },
+    share: 'Dela ordlista',
+    shareCopied: 'Länk kopierad till urklipp!',
   },
 };
 

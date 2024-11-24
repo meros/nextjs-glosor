@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Stack, Text, Checkbox } from '@mantine/core';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import VocabularyTest from '../components/VocabularyTest';
 import { useTraining } from '../context/TrainingContext';
@@ -10,8 +10,10 @@ import PageContent from '../components/PageContent';
 
 export default function TrainPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const {
+    setItems,
     currentItem,
     checkAnswer,
     countdownToNextItem: countdown,
@@ -20,6 +22,39 @@ export default function TrainPage() {
     goToNextItem,
     checkAnswerFeedback: feedback,
   } = useTraining();
+
+  useEffect(() => {
+    const sharedData = searchParams.get('share');
+    if (sharedData) {
+      try {
+        const decodedData = JSON.parse(atob(sharedData));
+        const trainingItems = decodedData.items.flatMap((item) => [
+          {
+            from: item.a,
+            to: item.b,
+            correct: 0,
+            total: 0,
+            lastReviewed: Date.now(),
+            fromLanguage: decodedData.fromLanguage,
+            toLanguage: decodedData.toLanguage,
+          },
+          {
+            from: item.b,
+            to: item.a,
+            correct: 0,
+            total: 0,
+            lastReviewed: Date.now(),
+            fromLanguage: decodedData.toLanguage,
+            toLanguage: decodedData.fromLanguage,
+          },
+        ]);
+        setItems(trainingItems);
+        router.replace('/train'); // Remove share parameter from URL
+      } catch (error) {
+        console.error('Failed to parse shared data:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {

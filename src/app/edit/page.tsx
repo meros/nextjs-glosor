@@ -1,6 +1,7 @@
 'use client';
 
-import { Button, Stack, Text } from '@mantine/core';
+import { Button, Stack, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
+import { IconShare } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import GlossaryEditor, { Glossary, GlossaryEditorProps, GlossaryItem } from '../components/GlossaryEditor';
@@ -148,10 +149,35 @@ export default function EditPage() {
     router.push('/train');
   };
 
+  const handleShare = () => {
+    const shareData = {
+      name: glossary.name,
+      fromLanguage: glossary.fromLanguage,
+      toLanguage: glossary.toLanguage,
+      items: glossary.items,
+    };
+
+    const encoded = btoa(JSON.stringify(shareData));
+    const url = `${window.location.origin}/train?share=${encoded}`;
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(url).then(() => {
+      // You might want to add a toast notification here
+      alert('Share link copied to clipboard!');
+    });
+  };
+
   return (
     <PageContent>
       <Stack>
-        <Text size="xl">Ändra glosor</Text>
+        <Group justify="space-between">
+          <Text size="xl">Ändra glosor</Text>
+          <Tooltip label="Share">
+            <ActionIcon onClick={handleShare} variant="light" color="blue" size="lg">
+              <IconShare size={20} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
 
         {/* Glossary Management */}
         <GlossaryManager

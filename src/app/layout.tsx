@@ -21,6 +21,14 @@ export default function Layout({
         <meta name="description" content={metadata.description} />
         <title>{metadata.title}</title>
         <ColorSchemeScript />
+        <link rel="icon" type="image/jpg" href="/favicon-32x32.jpg" />
+        <link rel="apple-touch-icon" sizes="48x48" href="/favicon-48x48.jpg" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/favicon-72x72.jpg" />
+        <link rel="apple-touch-icon" sizes="96x96" href="/favicon-96x96.jpg" />
+        <link rel="apple-touch-icon" sizes="256x256" href="/favicon-256x256.jpg" />
+        <link rel="apple-touch-icon" sizes="384x384" href="/favicon-384x384.jpg" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/favicon-512x512.jpg" />
+        <link rel="manifest" href="/manifest.webmanifest" crossOrigin="anonymous" />
       </head>
       <body>
         <Providers>{children}</Providers>
