@@ -2,32 +2,22 @@
 
 import { Button, Stack, Text, Checkbox } from '@mantine/core';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import VocabularyTest from '../components/VocabularyTest';
 import { useTraining } from '../context/TrainingContext';
 import { useLocale } from '../context/LocaleContext';
 import PageContent from '../components/PageContent';
+import { Glossary } from '../components/GlossaryEditor';
 
-export default function TrainPage() {
+function TrainSearchParamLoader() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const locale = useLocale();
-  const {
-    setItems,
-    currentItem,
-    checkAnswer,
-    countdownToNextItem: countdown,
-    isCaseSensitive,
-    setIsCaseSensitive,
-    goToNextItem,
-    checkAnswerFeedback: feedback,
-  } = useTraining();
-
+  const { setItems } = useTraining();
   useEffect(() => {
     const sharedData = searchParams.get('share');
     if (sharedData) {
       try {
-        const decodedData = JSON.parse(atob(sharedData));
+        const decodedData = JSON.parse(atob(sharedData)) as Glossary;
         const trainingItems = decodedData.items.flatMap((item) => [
           {
             from: item.a,
@@ -56,6 +46,22 @@ export default function TrainPage() {
     }
   }, []);
 
+  return null;
+}
+
+export default function TrainPage() {
+  const router = useRouter();
+  const locale = useLocale();
+  const {
+    currentItem,
+    checkAnswer,
+    countdownToNextItem: countdown,
+    isCaseSensitive,
+    setIsCaseSensitive,
+    goToNextItem,
+    checkAnswerFeedback: feedback,
+  } = useTraining();
+
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && feedback) {
@@ -80,6 +86,9 @@ export default function TrainPage() {
 
   return (
     <PageContent>
+      <Suspense>
+        <TrainSearchParamLoader />
+      </Suspense>
       <Stack>
         <Text size="xl">{locale.train.title}</Text>
         {feedback ? (

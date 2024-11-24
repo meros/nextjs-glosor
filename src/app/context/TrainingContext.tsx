@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState, useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-interface TrainingItem {
+export interface TrainingItem {
   from: string;
   to: string;
   correct: number;
