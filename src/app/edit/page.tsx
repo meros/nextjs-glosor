@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Stack, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
+import { Button, Stack, Text, ActionIcon, Tooltip, Group, Select } from '@mantine/core';
 import { IconShare } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -76,6 +76,7 @@ export default function EditPage() {
   const [glossaries, setGlossaries] = useLocalStorage<Glossary[]>('glossaries', initialGlossaries);
   const [selectedGlossaryIdx, setSelectedGlossaryIdx] = useState(0);
   const [newGlossaryItem, setNewGlossaryItem] = useState<GlossaryItem>({ a: '', b: '' });
+  const [direction, setDirection] = useState<'both' | 'forward' | 'backward'>('both');
 
   useEffect(() => {
     setGlossary(glossaries[selectedGlossaryIdx]);
@@ -122,8 +123,33 @@ export default function EditPage() {
   );
 
   const setTrainingItemsAndNavigate = () => {
-    const trainingItems = glossary.items.flatMap((item) => [
-      {
+    let trainingItems = [];
+
+    if (direction === 'both') {
+      trainingItems = glossary.items.flatMap((item) => [
+        {
+          from: item.a,
+          to: item.b,
+          correct: 0,
+          total: 0,
+          lastReviewed: Date.now(),
+          confidence: 0,
+          fromLanguage: glossary.fromLanguage,
+          toLanguage: glossary.toLanguage,
+        },
+        {
+          from: item.b,
+          to: item.a,
+          correct: 0,
+          total: 0,
+          lastReviewed: Date.now(),
+          confidence: 0,
+          fromLanguage: glossary.toLanguage,
+          toLanguage: glossary.fromLanguage,
+        },
+      ]);
+    } else if (direction === 'forward') {
+      trainingItems = glossary.items.map((item) => ({
         from: item.a,
         to: item.b,
         correct: 0,
@@ -132,8 +158,9 @@ export default function EditPage() {
         confidence: 0,
         fromLanguage: glossary.fromLanguage,
         toLanguage: glossary.toLanguage,
-      },
-      {
+      }));
+    } else if (direction === 'backward') {
+      trainingItems = glossary.items.map((item) => ({
         from: item.b,
         to: item.a,
         correct: 0,
@@ -142,8 +169,8 @@ export default function EditPage() {
         confidence: 0,
         fromLanguage: glossary.toLanguage,
         toLanguage: glossary.fromLanguage,
-      },
-    ]);
+      }));
+    }
 
     setItems(trainingItems);
     router.push('/train');
@@ -191,6 +218,17 @@ export default function EditPage() {
 
         {/* Glossary Editing */}
         <GlossaryEditor data={data} onHandlers={onHandlers} />
+
+        <Select
+          label="Övningsriktning"
+          value={direction}
+          onChange={(value) => setDirection(value as 'both' | 'forward' | 'backward')}
+          data={[
+            { value: 'both', label: 'Båda riktningarna' },
+            { value: 'forward', label: 'Från språk A till språk B' },
+            { value: 'backward', label: 'Från språk B till språk A' },
+          ]}
+        />
 
         <Button size="lg" onClick={setTrainingItemsAndNavigate} variant="filled" color="blue">
           Träna glosor

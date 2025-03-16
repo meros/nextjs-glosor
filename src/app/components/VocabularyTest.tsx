@@ -1,5 +1,5 @@
-import { Button, Group, Stack, Text, TextInput } from '@mantine/core';
-import { useCallback, useEffect, useRef } from 'react';
+import { Button, Group, Stack, Text, TextInput, Select } from '@mantine/core';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { languages } from '../constants';
 import { useLocale } from '../hooks/useLocale';
 
@@ -17,6 +17,7 @@ interface VocabularyTestProps {
 export default function VocabularyTest({ data, onHandlers }: VocabularyTestProps) {
   const locale = useLocale();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -35,6 +36,14 @@ export default function VocabularyTest({ data, onHandlers }: VocabularyTestProps
         {locale.train.translate} <strong>{data.fromVocabulary}</strong> {locale.train.from}
         <strong>{fromLang?.flag}</strong> {locale.train.to} <strong>{toLang?.flag}</strong>
       </Text>
+      <Select
+        value={direction}
+        onChange={(value) => setDirection(value as 'forward' | 'backward')}
+        data={[
+          { value: 'forward', label: `${fromLang?.flag} ${locale.train.from} ${toLang?.flag}` },
+          { value: 'backward', label: `${toLang?.flag} ${locale.train.from} ${fromLang?.flag}` },
+        ]}
+      />
       <Group>
         <TextInput
           flex={1}

@@ -21,6 +21,8 @@ interface TrainingContextValue {
   countdownToNextItem: number;
   goToNextItem: () => void;
   setIsCaseSensitive: (isCaseSensitive: boolean) => void;
+  direction: 'both' | 'forward' | 'backward';
+  setDirection: (direction: 'both' | 'forward' | 'backward') => void;
 }
 
 const TrainingContext = createContext<TrainingContextValue | undefined>(undefined);
@@ -45,6 +47,7 @@ export const TrainingProvider = ({ children }: TrainingProviderProps) => {
   const [countdownToNextItem, setCountdownToNextItem] = useState(5);
   const [isCaseSensitive, setIsCaseSensitive] = useLocalStorage<boolean>('isCaseSensitive', true);
   const [currentItemIdx, setCurrentItemIdx] = useState<number | undefined>(undefined);
+  const [direction, setDirection] = useLocalStorage<'both' | 'forward' | 'backward'>('direction', 'both');
 
   const currentItem = useMemo(
     () => (currentItemIdx !== undefined ? items[currentItemIdx] : null),
@@ -132,6 +135,8 @@ export const TrainingProvider = ({ children }: TrainingProviderProps) => {
         countdownToNextItem,
         goToNextItem,
         setIsCaseSensitive,
+        direction,
+        setDirection,
       }}
     >
       {children}
