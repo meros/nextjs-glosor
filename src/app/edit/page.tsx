@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Stack, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
+import { Button, Stack, Text, ActionIcon, Tooltip, Group, SegmentedControl } from '@mantine/core';
 import { IconShare } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -10,6 +10,7 @@ import PageContent from '../components/PageContent';
 import { useGlossary } from '../context/GlossaryContext';
 import { useTraining } from '../context/TrainingContext';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { languages } from '../constants';
 
 const initialGlossaries: Glossary[] = [
   {
@@ -76,6 +77,7 @@ export default function EditPage() {
   const [glossaries, setGlossaries] = useLocalStorage<Glossary[]>('glossaries', initialGlossaries);
   const [selectedGlossaryIdx, setSelectedGlossaryIdx] = useState(0);
   const [newGlossaryItem, setNewGlossaryItem] = useState<GlossaryItem>({ a: '', b: '' });
+  const [trainingMode, setTrainingMode] = useState<'both' | 'fromTo' | 'toFrom'>('both');
 
   useEffect(() => {
     setGlossary(glossaries[selectedGlossaryIdx]);
@@ -86,13 +88,13 @@ export default function EditPage() {
       setGlossaries((prev) => [...prev, { name, fromLanguage: 'se', toLanguage: 'en', items: [] }]);
       setSelectedGlossaryIdx(glossaries.length);
     },
-    [glossaries.length],
+    [glossaries.length, setGlossaries],
   );
 
   const deleteGlossary = useCallback(() => {
     setGlossaries((prevGlossaries) => prevGlossaries.filter((_, idx) => idx !== selectedGlossaryIdx));
     setSelectedGlossaryIdx(0);
-  }, [selectedGlossaryIdx]);
+  }, [selectedGlossaryIdx, setGlossaries]);
 
   const renameGlossary = (name: string) => {
     setGlossaries((prevGlossaries) => {
@@ -118,32 +120,38 @@ export default function EditPage() {
       },
       setNewGlossary: setNewGlossaryItem,
     }),
-    [selectedGlossaryIdx],
+    [selectedGlossaryIdx, setGlossaries],
   );
 
   const setTrainingItemsAndNavigate = () => {
-    const trainingItems = glossary.items.flatMap((item) => [
-      {
-        from: item.a,
-        to: item.b,
-        correct: 0,
-        total: 0,
-        lastReviewed: Date.now(),
-        confidence: 0,
-        fromLanguage: glossary.fromLanguage,
-        toLanguage: glossary.toLanguage,
-      },
-      {
-        from: item.b,
-        to: item.a,
-        correct: 0,
-        total: 0,
-        lastReviewed: Date.now(),
-        confidence: 0,
-        fromLanguage: glossary.toLanguage,
-        toLanguage: glossary.fromLanguage,
-      },
-    ]);
+    const trainingItems = glossary.items.flatMap((item) => {
+      const items = [];
+      if (trainingMode === 'both' || trainingMode === 'fromTo') {
+        items.push({
+          from: item.a,
+          to: item.b,
+          correct: 0,
+          total: 0,
+          lastReviewed: Date.now(),
+          confidence: 0,
+          fromLanguage: glossary.fromLanguage,
+          toLanguage: glossary.toLanguage,
+        });
+      }
+      if (trainingMode === 'both' || trainingMode === 'toFrom') {
+        items.push({
+          from: item.b,
+          to: item.a,
+          correct: 0,
+          total: 0,
+          lastReviewed: Date.now(),
+          confidence: 0,
+          fromLanguage: glossary.toLanguage,
+          toLanguage: glossary.fromLanguage,
+        });
+      }
+      return items;
+    });
 
     setItems(trainingItems);
     router.push('/train');
@@ -165,6 +173,13 @@ export default function EditPage() {
       // You might want to add a toast notification here
       alert('Share link copied to clipboard!');
     });
+  };
+
+  // Helper to get flag emoji by language code
+  const getFlag = (lang: string) => {
+    const langData = languages.find((l) => l.code === lang);
+
+    return langData ? langData.flag : '🏳️';
   };
 
   return (
@@ -191,6 +206,17 @@ export default function EditPage() {
 
         {/* Glossary Editing */}
         <GlossaryEditor data={data} onHandlers={onHandlers} />
+
+        {/* Training Mode Selection */}
+        <SegmentedControl
+          value={trainingMode}
+          onChange={(value) => setTrainingMode(value as 'both' | 'fromTo' | 'toFrom')}
+          data={[
+            { label: 'Båda', value: 'both' },
+            { label: `${getFlag(glossary.fromLanguage)} → ${getFlag(glossary.toLanguage)}`, value: 'fromTo' },
+            { label: `${getFlag(glossary.toLanguage)} → ${getFlag(glossary.fromLanguage)}`, value: 'toFrom' },
+          ]}
+        />
 
         <Button size="lg" onClick={setTrainingItemsAndNavigate} variant="filled" color="blue">
           Träna glosor
