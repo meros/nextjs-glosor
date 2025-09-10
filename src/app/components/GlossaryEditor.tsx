@@ -18,7 +18,7 @@ export interface GlossaryItem {
 
 export interface GlossaryEditorProps {
   data: {
-    glossary: Glossary;
+    glossary: Glossary | null;
     newGlossary: GlossaryItem;
   };
   onHandlers: {
@@ -33,6 +33,16 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
   const locale = useLocale();
 
   const disableAddGlossaryButton = useMemo(() => !(newGlossary.a && newGlossary.b), [newGlossary]);
+  const ref = useRef<HTMLInputElement>(null);
+
+  // If no glossary is selected, show a message
+  if (!glossary) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <p>No glossary selected. Please create a new glossary or select an existing one.</p>
+      </div>
+    );
+  }
 
   const addGlossaryItem = () => {
     setGlossary({
@@ -63,8 +73,6 @@ export default function GlossaryEditor({ data, onHandlers }: GlossaryEditorProps
   const setToLanguage = (value: string) => {
     setGlossary({ ...glossary, toLanguage: value });
   };
-
-  const ref = useRef<HTMLInputElement>(null);
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && !disableAddGlossaryButton) {

@@ -80,7 +80,9 @@ export default function EditPage() {
   const [trainingMode, setTrainingMode] = useState<'both' | 'fromTo' | 'toFrom'>('both');
 
   useEffect(() => {
-    setGlossary(glossaries[selectedGlossaryIdx]);
+    if (glossaries.length > 0 && selectedGlossaryIdx >= 0 && selectedGlossaryIdx < glossaries.length) {
+      setGlossary(glossaries[selectedGlossaryIdx]);
+    }
   }, [glossaries, selectedGlossaryIdx, setGlossary]);
 
   const addGlossary = useCallback(
@@ -92,8 +94,20 @@ export default function EditPage() {
   );
 
   const deleteGlossary = useCallback(() => {
-    setGlossaries((prevGlossaries) => prevGlossaries.filter((_, idx) => idx !== selectedGlossaryIdx));
-    setSelectedGlossaryIdx(0);
+    setGlossaries((prevGlossaries) => {
+      const updatedGlossaries = prevGlossaries.filter((_, idx) => idx !== selectedGlossaryIdx);
+      // If we're deleting the last glossary, reset the selected index appropriately
+      if (updatedGlossaries.length === 0) {
+        setSelectedGlossaryIdx(-1); // No glossary selected
+      } else if (selectedGlossaryIdx >= updatedGlossaries.length) {
+        setSelectedGlossaryIdx(updatedGlossaries.length - 1); // Select the last glossary
+      } else {
+        setSelectedGlossaryIdx(
+          Math.max(0, selectedGlossaryIdx - (selectedGlossaryIdx >= updatedGlossaries.length ? 1 : 0)),
+        );
+      }
+      return updatedGlossaries;
+    });
   }, [selectedGlossaryIdx, setGlossaries]);
 
   const renameGlossary = (name: string) => {
@@ -124,6 +138,8 @@ export default function EditPage() {
   );
 
   const setTrainingItemsAndNavigate = () => {
+    if (!glossary || glossary.items.length === 0) return;
+    
     const trainingItems = glossary.items.flatMap((item) => {
       const items = [];
       if (trainingMode === 'both' || trainingMode === 'fromTo') {
@@ -158,6 +174,8 @@ export default function EditPage() {
   };
 
   const handleShare = () => {
+    if (!glossary) return;
+    
     const shareData = {
       name: glossary.name,
       fromLanguage: glossary.fromLanguage,
@@ -207,20 +225,32 @@ export default function EditPage() {
         {/* Glossary Editing */}
         <GlossaryEditor data={data} onHandlers={onHandlers} />
 
-        {/* Training Mode Selection */}
-        <SegmentedControl
-          value={trainingMode}
-          onChange={(value) => setTrainingMode(value as 'both' | 'fromTo' | 'toFrom')}
-          data={[
-            { label: 'Båda', value: 'both' },
-            { label: `${getFlag(glossary.fromLanguage)} → ${getFlag(glossary.toLanguage)}`, value: 'fromTo' },
-            { label: `${getFlag(glossary.toLanguage)} → ${getFlag(glossary.fromLanguage)}`, value: 'toFrom' },
-          ]}
-        />
+        {/* Show training controls only if a glossary is selected */}
+        {glossary && (
+          <>
+            {/* Training Mode Selection */}
+            <SegmentedControl
+              value={trainingMode}
+              onChange={(value) => setTrainingMode(value as 'both' | 'fromTo' | 'toFrom')}
+              data={[
+                { label: 'Båda', value: 'both' },
+                { label: `${getFlag(glossary.fromLanguage)} → ${getFlag(glossary.toLanguage)}`, value: 'fromTo' },
+                { label: `${getFlag(glossary.toLanguage)} → ${getFlag(glossary.fromLanguage)}`, value: 'toFrom' },
+              ]}
+            />
 
-        <Button size="lg" onClick={setTrainingItemsAndNavigate} variant="filled" color="blue">
-          Träna glosor
-        </Button>
+            <Button size="lg" onClick={setTrainingItemsAndNavigate} variant="filled" color="blue">
+              Träna glosor
+            </Button>
+          </>
+        )}
+
+        {/* Show message when no glossary is selected */}
+        {!glossary && (
+          <Text ta="center" c="dimmed" py="xl">
+            No glossary selected. Create a new glossary or select an existing one to start editing.
+          </Text>
+        )}
       </Stack>
     </PageContent>
   );
