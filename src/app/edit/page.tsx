@@ -139,7 +139,7 @@ export default function EditPage() {
 
   const setTrainingItemsAndNavigate = () => {
     if (!glossary || glossary.items.length === 0) return;
-    
+
     const trainingItems = glossary.items.flatMap((item) => {
       const items = [];
       if (trainingMode === 'both' || trainingMode === 'fromTo') {
@@ -175,7 +175,7 @@ export default function EditPage() {
 
   const handleShare = () => {
     if (!glossary) return;
-    
+
     const shareData = {
       name: glossary.name,
       fromLanguage: glossary.fromLanguage,
