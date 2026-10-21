@@ -1,257 +1,65 @@
 'use client';
 
-import { Button, Stack, Text, ActionIcon, Tooltip, Group, SegmentedControl } from '@mantine/core';
-import { IconShare } from '@tabler/icons-react';
+import { Skeleton, Stack, Text, Title } from '@mantine/core';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import GlossaryEditor, { Glossary, GlossaryEditorProps, GlossaryItem } from '../components/GlossaryEditor';
-import GlossaryManager from '../components/GlossaryManager';
-import PageContent from '../components/PageContent';
-import { useGlossary } from '../context/GlossaryContext';
-import { useTraining } from '../context/TrainingContext';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { languages } from '../constants';
-
-const initialGlossaries: Glossary[] = [
-  {
-    name: 'Easy German',
-    fromLanguage: 'se',
-    toLanguage: 'de',
-    items: [
-      { a: 'Hus', b: 'Haus' },
-      { a: 'Bil', b: 'Auto' },
-    ],
-  },
-  {
-    name: 'Medium English',
-    fromLanguage: 'se',
-    toLanguage: 'en',
-    items: [
-      { a: 'Hund', b: 'Dog' },
-      { a: 'Katt', b: 'Cat' },
-    ],
-  },
-  {
-    name: 'Svenska Bokstaveringsalfabetet',
-    fromLanguage: 'sv',
-    toLanguage: 'sv',
-    items: [
-      { a: 'a', b: 'Adam' },
-      { a: 'b', b: 'Bertil' },
-      { a: 'c', b: 'Cesar' },
-      { a: 'd', b: 'David' },
-      { a: 'e', b: 'Erik' },
-      { a: 'f', b: 'Filip' },
-      { a: 'g', b: 'Gustav' },
-      { a: 'h', b: 'Helge' },
-      { a: 'i', b: 'Ivar' },
-      { a: 'j', b: 'Johan' },
-      { a: 'k', b: 'Kalle' },
-      { a: 'l', b: 'Ludvig' },
-      { a: 'm', b: 'Martin' },
-      { a: 'n', b: 'Niklas' },
-      { a: 'o', b: 'Olof' },
-      { a: 'p', b: 'Petter' },
-      { a: 'q', b: 'Qvintus' },
-      { a: 'r', b: 'Rudolf' },
-      { a: 's', b: 'Sigurd' },
-      { a: 't', b: 'Tore' },
-      { a: 'u', b: 'Urban' },
-      { a: 'v', b: 'Viktor' },
-      { a: 'w', b: 'Wilhelm' },
-      { a: 'x', b: 'Xerxes' },
-      { a: 'y', b: 'Yngve' },
-      { a: 'z', b: 'Zäta' },
-      { a: 'å', b: 'Åke' },
-      { a: 'ä', b: 'Ärlig' },
-      { a: 'ö', b: 'Östen' },
-    ],
-  },
-];
+import GlossaryEditor from '@/components/GlossaryEditor';
+import GlossaryPicker from '@/components/GlossaryPicker';
+import PageContainer from '@/components/PageContainer';
+import PracticeBar from '@/components/PracticeBar';
+import { sv } from '@/i18n/sv';
+import { Direction } from '@/lib/training';
+import { useGlossaries } from '@/state/GlossaryProvider';
+import { usePractice } from '@/state/PracticeProvider';
 
 export default function EditPage() {
-  const { setGlossary, glossary } = useGlossary();
-  const { setItems } = useTraining();
   const router = useRouter();
+  const { ready, glossaries, selected, dispatch } = useGlossaries();
+  const practice = usePractice();
 
-  const [glossaries, setGlossaries] = useLocalStorage<Glossary[]>('glossaries', initialGlossaries);
-  const [selectedGlossaryIdx, setSelectedGlossaryIdx] = useState(0);
-  const [newGlossaryItem, setNewGlossaryItem] = useState<GlossaryItem>({ a: '', b: '' });
-  const [trainingMode, setTrainingMode] = useState<'both' | 'fromTo' | 'toFrom'>('both');
-
-  useEffect(() => {
-    if (glossaries.length > 0 && selectedGlossaryIdx >= 0 && selectedGlossaryIdx < glossaries.length) {
-      setGlossary(glossaries[selectedGlossaryIdx]);
+  const start = (direction: Direction) => {
+    if (!selected) {
+      return;
     }
-  }, [glossaries, selectedGlossaryIdx, setGlossary]);
-
-  const addGlossary = useCallback(
-    (name: string) => {
-      setGlossaries((prev) => [...prev, { name, fromLanguage: 'se', toLanguage: 'en', items: [] }]);
-      setSelectedGlossaryIdx(glossaries.length);
-    },
-    [glossaries.length, setGlossaries],
-  );
-
-  const deleteGlossary = useCallback(() => {
-    setGlossaries((prevGlossaries) => {
-      const updatedGlossaries = prevGlossaries.filter((_, idx) => idx !== selectedGlossaryIdx);
-      // If we're deleting the last glossary, reset the selected index appropriately
-      if (updatedGlossaries.length === 0) {
-        setSelectedGlossaryIdx(-1); // No glossary selected
-      } else if (selectedGlossaryIdx >= updatedGlossaries.length) {
-        setSelectedGlossaryIdx(updatedGlossaries.length - 1); // Select the last glossary
-      } else {
-        setSelectedGlossaryIdx(
-          Math.max(0, selectedGlossaryIdx - (selectedGlossaryIdx >= updatedGlossaries.length ? 1 : 0)),
-        );
-      }
-      return updatedGlossaries;
-    });
-  }, [selectedGlossaryIdx, setGlossaries]);
-
-  const renameGlossary = (name: string) => {
-    setGlossaries((prevGlossaries) => {
-      const updatedGlossaries = [...prevGlossaries];
-      updatedGlossaries[selectedGlossaryIdx].name = name;
-      return updatedGlossaries;
-    });
-  };
-
-  const data: GlossaryEditorProps['data'] = {
-    glossary: glossaries[selectedGlossaryIdx],
-    newGlossary: newGlossaryItem,
-  };
-
-  const onHandlers: GlossaryEditorProps['onHandlers'] = useMemo(
-    () => ({
-      setGlossary: (updatedGlossary) => {
-        setGlossaries((prevGlossaries) => {
-          const updatedGlossaries = [...prevGlossaries];
-          updatedGlossaries[selectedGlossaryIdx] = updatedGlossary;
-          return updatedGlossaries;
-        });
-      },
-      setNewGlossary: setNewGlossaryItem,
-    }),
-    [selectedGlossaryIdx, setGlossaries],
-  );
-
-  const setTrainingItemsAndNavigate = () => {
-    if (!glossary || glossary.items.length === 0) return;
-
-    const trainingItems = glossary.items.flatMap((item) => {
-      const items = [];
-      if (trainingMode === 'both' || trainingMode === 'fromTo') {
-        items.push({
-          from: item.a,
-          to: item.b,
-          correct: 0,
-          total: 0,
-          lastReviewed: Date.now(),
-          confidence: 0,
-          fromLanguage: glossary.fromLanguage,
-          toLanguage: glossary.toLanguage,
-        });
-      }
-      if (trainingMode === 'both' || trainingMode === 'toFrom') {
-        items.push({
-          from: item.b,
-          to: item.a,
-          correct: 0,
-          total: 0,
-          lastReviewed: Date.now(),
-          confidence: 0,
-          fromLanguage: glossary.toLanguage,
-          toLanguage: glossary.fromLanguage,
-        });
-      }
-      return items;
-    });
-
-    setItems(trainingItems);
+    practice.start(selected, direction);
     router.push('/train');
   };
 
-  const handleShare = () => {
-    if (!glossary) return;
+  if (!ready) {
+    return (
+      <PageContainer>
+        <Stack aria-busy="true">
+          <Skeleton height={36} width="60%" />
+          <Skeleton height={42} />
+          <Skeleton height={240} />
+        </Stack>
+      </PageContainer>
+    );
+  }
 
-    const shareData = {
-      name: glossary.name,
-      fromLanguage: glossary.fromLanguage,
-      toLanguage: glossary.toLanguage,
-      items: glossary.items,
-    };
-
-    const encoded = btoa(JSON.stringify(shareData));
-    const url = `${window.location.origin}/train?share=${encoded}`;
-
-    // Copy to clipboard
-    navigator.clipboard.writeText(url).then(() => {
-      // You might want to add a toast notification here
-      alert('Share link copied to clipboard!');
-    });
-  };
-
-  // Helper to get flag emoji by language code
-  const getFlag = (lang: string) => {
-    const langData = languages.find((l) => l.code === lang);
-
-    return langData ? langData.flag : '🏳️';
-  };
+  if (glossaries.length === 0) {
+    return (
+      <PageContainer>
+        <Stack align="center" gap="sm" py="xl" ta="center">
+          <Title order={1}>{sv.lists.emptyTitle}</Title>
+          <Text c="dimmed">{sv.lists.emptyBody}</Text>
+          <GlossaryPicker glossaries={glossaries} selected={selected} dispatch={dispatch} />
+        </Stack>
+      </PageContainer>
+    );
+  }
 
   return (
-    <PageContent>
-      <Stack>
-        <Group justify="space-between">
-          <Text size="xl">Ändra glosor</Text>
-          <Tooltip label="Share">
-            <ActionIcon onClick={handleShare} variant="light" color="blue" size="lg">
-              <IconShare size={20} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-
-        {/* Glossary Management */}
-        <GlossaryManager
-          glossaries={glossaries}
-          selectedGlossaryIdx={selectedGlossaryIdx}
-          onSelectGlossary={setSelectedGlossaryIdx}
-          onAddGlossary={addGlossary}
-          onDeleteGlossary={deleteGlossary}
-          onRenameGlossary={renameGlossary}
-        />
-
-        {/* Glossary Editing */}
-        <GlossaryEditor data={data} onHandlers={onHandlers} />
-
-        {/* Show training controls only if a glossary is selected */}
-        {glossary && (
+    <PageContainer>
+      <Stack gap="md">
+        <Title order={1}>{sv.lists.title}</Title>
+        <GlossaryPicker glossaries={glossaries} selected={selected} dispatch={dispatch} />
+        {selected && (
           <>
-            {/* Training Mode Selection */}
-            <SegmentedControl
-              value={trainingMode}
-              onChange={(value) => setTrainingMode(value as 'both' | 'fromTo' | 'toFrom')}
-              data={[
-                { label: 'Båda', value: 'both' },
-                { label: `${getFlag(glossary.fromLanguage)} → ${getFlag(glossary.toLanguage)}`, value: 'fromTo' },
-                { label: `${getFlag(glossary.toLanguage)} → ${getFlag(glossary.fromLanguage)}`, value: 'toFrom' },
-              ]}
-            />
-
-            <Button size="lg" onClick={setTrainingItemsAndNavigate} variant="filled" color="blue">
-              Träna glosor
-            </Button>
+            <PracticeBar key={`bar-${selected.id}`} glossary={selected} onStart={start} />
+            <GlossaryEditor key={selected.id} glossary={selected} dispatch={dispatch} />
           </>
         )}
-
-        {/* Show message when no glossary is selected */}
-        {!glossary && (
-          <Text ta="center" c="dimmed" py="xl">
-            No glossary selected. Create a new glossary or select an existing one to start editing.
-          </Text>
-        )}
       </Stack>
-    </PageContent>
+    </PageContainer>
   );
 }

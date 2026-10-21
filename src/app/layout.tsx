@@ -1,39 +1,53 @@
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import './globals.css';
+
+import { ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
 import { GoogleAnalytics } from '@next/third-parties/google';
-import { Metadata } from 'next';
-import Providers from './providers';
-import { ColorSchemeScript } from '@mantine/core';
+import type { Metadata, Viewport } from 'next';
+import { ReactNode } from 'react';
+import AppHeader from '@/components/AppHeader';
+import { sv } from '@/i18n/sv';
+import Providers from '@/state/Providers';
 
-export const metadata = {
-  title: 'Glosorna.se',
-  description: 'En sida för att öva på glosor',
-} satisfies Metadata;
+export const metadata: Metadata = {
+  title: { default: 'Glosorna.se', template: '%s | Glosorna.se' },
+  description: sv.metaDescription,
+  applicationName: 'Glosorna',
+  icons: {
+    icon: [{ url: '/favicon-32x32.jpg', type: 'image/jpeg', sizes: '32x32' }],
+    apple: [{ url: '/favicon-192x192.jpg', sizes: '192x192' }],
+  },
+};
 
-export default function Layout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#242424' },
+  ],
+};
+
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="sv" {...mantineHtmlProps}>
       <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content={metadata.description} />
-        <title>{metadata.title}</title>
-        <ColorSchemeScript />
-        <link rel="icon" type="image/jpg" href="/favicon-32x32.jpg" />
-        <link rel="apple-touch-icon" sizes="48x48" href="/favicon-48x48.jpg" />
-        <link rel="apple-touch-icon" sizes="72x72" href="/favicon-72x72.jpg" />
-        <link rel="apple-touch-icon" sizes="96x96" href="/favicon-96x96.jpg" />
-        <link rel="apple-touch-icon" sizes="256x256" href="/favicon-256x256.jpg" />
-        <link rel="apple-touch-icon" sizes="384x384" href="/favicon-384x384.jpg" />
-        <link rel="apple-touch-icon" sizes="512x512" href="/favicon-512x512.jpg" />
-        <link rel="manifest" href="/manifest.webmanifest" crossOrigin="anonymous" />
+        <ColorSchemeScript defaultColorScheme="auto" />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <a href="#main" className="skip-link">
+          {sv.nav.skip}
+        </a>
+        <Providers>
+          <AppHeader />
+          <main id="main" tabIndex={-1}>
+            {children}
+          </main>
+        </Providers>
+        <GoogleAnalytics gaId="G-SZ2CB4C0EF" />
       </body>
-      <GoogleAnalytics gaId="G-SZ2CB4C0EF" />
     </html>
   );
 }

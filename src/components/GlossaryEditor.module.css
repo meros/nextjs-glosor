@@ -1,0 +1,15 @@
+.list {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Two fields side by side from the narrowest phone up; the delete button keeps a 44px target. */
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.75rem;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}

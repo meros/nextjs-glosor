@@ -1,129 +1,71 @@
 'use client';
 
-import { Button, Stack, Text, Checkbox } from '@mantine/core';
+import { Button, Skeleton, Stack, Text, Title } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
-import VocabularyTest from '../components/VocabularyTest';
-import { useTraining } from '../context/TrainingContext';
-import { useLocale } from '../context/LocaleContext';
-import PageContent from '../components/PageContent';
-import { Glossary } from '../components/GlossaryEditor';
+import { Suspense, useEffect, useRef } from 'react';
+import PageContainer from '@/components/PageContainer';
+import PracticeView from '@/components/PracticeView';
+import { sv } from '@/i18n/sv';
+import { decodeShare } from '@/lib/share';
+import { useGlossaries } from '@/state/GlossaryProvider';
+import { usePractice } from '@/state/PracticeProvider';
 
-function TrainSearchParamLoader() {
+/** Imports a list from a `?share=` link, starts practice on it and removes the parameter from the address. */
+function SharedListLoader() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setItems } = useTraining();
+  const glossaries = useGlossaries();
+  const practice = usePractice();
+  const handled = useRef(false);
+  const param = searchParams.get('share');
+  const ready = glossaries.ready && practice.ready;
+
   useEffect(() => {
-    const sharedData = searchParams.get('share');
-    if (sharedData) {
-      try {
-        const decodedData = JSON.parse(atob(sharedData)) as Glossary;
-        const trainingItems = decodedData.items.flatMap((item) => [
-          {
-            from: item.a,
-            to: item.b,
-            correct: 0,
-            total: 0,
-            lastReviewed: Date.now(),
-            fromLanguage: decodedData.fromLanguage,
-            toLanguage: decodedData.toLanguage,
-          },
-          {
-            from: item.b,
-            to: item.a,
-            correct: 0,
-            total: 0,
-            lastReviewed: Date.now(),
-            fromLanguage: decodedData.toLanguage,
-            toLanguage: decodedData.fromLanguage,
-          },
-        ]);
-        setItems(trainingItems);
-        router.replace('/train'); // Remove share parameter from URL
-      } catch (error) {
-        console.error('Failed to parse shared data:', error);
-      }
+    // The providers read saved data in their own effects. Importing earlier would be overwritten.
+    if (!param || !ready || handled.current) {
+      return;
     }
-  }, []);
+    handled.current = true;
+    const glossary = decodeShare(param);
+    if (glossary) {
+      glossaries.dispatch({ type: 'import', glossary });
+      practice.start(glossary, 'both');
+      notifications.show({ message: sv.train.sharedImported(glossary.name), color: 'teal' });
+    } else {
+      notifications.show({ message: sv.train.sharedInvalid, color: 'red' });
+    }
+    router.replace('/train');
+  }, [param, ready, glossaries, practice, router]);
 
   return null;
 }
 
 export default function TrainPage() {
-  const router = useRouter();
-  const locale = useLocale();
-  const {
-    currentItem,
-    checkAnswer,
-    countdownToNextItem: countdown,
-    isCaseSensitive,
-    setIsCaseSensitive,
-    goToNextItem,
-    checkAnswerFeedback: feedback,
-  } = useTraining();
-
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'Enter' && feedback) {
-        event.preventDefault(); // Prevent default Enter behavior
-        goToNextItem();
-      }
-    };
-
-    if (feedback) {
-      window.addEventListener('keydown', handleKeyPress, true); // Add capture phase
-      return () => window.removeEventListener('keydown', handleKeyPress, true);
-    }
-  }, [feedback, goToNextItem]);
-
-  if (!currentItem) {
-    return (
-      <PageContent>
-        <Text size="xl">{locale.train.noGlossaries}</Text>
-      </PageContent>
-    );
-  }
+  const { ready, card } = usePractice();
 
   return (
-    <PageContent>
+    <PageContainer>
       <Suspense>
-        <TrainSearchParamLoader />
+        <SharedListLoader />
       </Suspense>
-      <Stack>
-        <Text size="xl">{locale.train.title}</Text>
-        {feedback ? (
-          <Stack align="center">
-            <Text size="xl" c={feedback.isCorrect ? 'green' : 'red'}>
-              {feedback.isCorrect ? locale.train.feedback.correct : locale.train.feedback.wrong}
-            </Text>
-            {!feedback.isCorrect && (
-              <Text size="lg">
-                {locale.train.feedback.correctAnswer} <strong>{feedback.correctAnswer}</strong>
-              </Text>
-            )}
-            <Button onClick={goToNextItem} fullWidth>
-              {locale.common.next} ({countdown})
-            </Button>
-          </Stack>
-        ) : (
-          <VocabularyTest
-            data={{
-              fromVocabulary: currentItem.from,
-              fromLanguage: currentItem.fromLanguage,
-              toLanguage: currentItem.toLanguage,
-            }}
-            onHandlers={{ onCheckAnswer: checkAnswer }}
-          />
-        )}
-
-        <Checkbox
-          label={locale.train.caseSensitive}
-          checked={isCaseSensitive}
-          onChange={() => setIsCaseSensitive(!isCaseSensitive)}
-        />
-
-        <Button onClick={() => router.push('/edit')}>{locale.train.editGlossaries}</Button>
-      </Stack>
-    </PageContent>
+      {!ready ? (
+        <Stack aria-busy="true">
+          <Skeleton height={36} width="40%" />
+          <Skeleton height={220} />
+        </Stack>
+      ) : card ? (
+        <PracticeView />
+      ) : (
+        <Stack align="center" gap="sm" py="xl" ta="center">
+          <Title order={1}>{sv.train.emptyTitle}</Title>
+          <Text c="dimmed">{sv.train.emptyBody}</Text>
+          <Button component={Link} href="/edit">
+            {sv.train.toLists}
+          </Button>
+        </Stack>
+      )}
+    </PageContainer>
   );
 }
