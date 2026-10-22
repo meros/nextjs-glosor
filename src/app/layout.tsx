@@ -3,7 +3,6 @@ import '@mantine/notifications/styles.css';
 import './globals.css';
 
 import { ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
-import { GoogleAnalytics } from '@next/third-parties/google';
 import type { Metadata, Viewport } from 'next';
 import { ReactNode } from 'react';
 import AppHeader from '@/components/AppHeader';
@@ -46,7 +45,6 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
             {children}
           </main>
         </Providers>
-        <GoogleAnalytics gaId="G-SZ2CB4C0EF" />
       </body>
     </html>
   );
