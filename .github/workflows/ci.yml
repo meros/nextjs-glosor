@@ -30,11 +30,11 @@ jobs:
             test-results/
 
   # Ships the image to Cloud Run (project meros-apps) after the checks pass on main.
-  # Set up in meros/hosting, see infra/variables.tf.
+  # Service, deploy account and trust are defined in meros/hosting.
   deploy:
     needs: check
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: meros/hosting/.github/workflows/deploy-cloud-run.yml@main
+    uses: meros/deploy-workflows/.github/workflows/deploy-cloud-run.yml@main
     with:
       app: glosorna
     permissions:
