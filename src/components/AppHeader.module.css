@@ -10,8 +10,9 @@
 .inner {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--mantine-spacing-sm);
+  gap: 0 var(--mantine-spacing-sm);
   max-width: 48rem;
   min-height: 3.5rem;
   margin: 0 auto;
@@ -31,6 +32,7 @@
 
 .nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
 }
 

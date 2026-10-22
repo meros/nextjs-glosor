@@ -127,7 +127,11 @@ test.describe('layout', () => {
   test('the layout stays usable when the text is zoomed to 200%', async ({ page }) => {
     await page.setViewportSize({ width: 640, height: 800 });
     await page.goto('/edit');
-    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+    // A wide fallback font makes the result the same on machines with different system fonts.
+    await page.addStyleTag({
+      content:
+        'html { font-size: 200% !important; } body, button, input { font-family: "DejaVu Sans", Verdana, sans-serif !important; }',
+    });
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
