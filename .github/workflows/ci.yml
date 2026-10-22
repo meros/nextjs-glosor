@@ -28,3 +28,15 @@ jobs:
           path: |
             playwright-report/
             test-results/
+
+  # Ships the image to Cloud Run (project meros-apps) after the checks pass on main.
+  # Set up in meros/hosting, see infra/variables.tf.
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: meros/hosting/.github/workflows/deploy-cloud-run.yml@main
+    with:
+      app: glosorna
+    permissions:
+      contents: read
+      id-token: write
